@@ -24,7 +24,7 @@ mcp = FastMCP("GIGR DuckDB MCP Server")
 db = get_db_manager()
 
 
-@mcp.tool()  # type: ignore[misc]
+@mcp.tool()
 def execute_query(query: str, parameters: list[Any] | None = None) -> dict[str, Any]:
     """Execute a SELECT query on the DuckDB database.
 
@@ -68,7 +68,7 @@ def execute_query(query: str, parameters: list[Any] | None = None) -> dict[str, 
         }
 
 
-@mcp.tool()  # type: ignore[misc]
+@mcp.tool()
 def execute_statement(
     statement: str, parameters: list[Any] | None = None
 ) -> dict[str, Any]:
@@ -101,7 +101,7 @@ def execute_statement(
         }
 
 
-@mcp.tool()  # type: ignore[misc]
+@mcp.tool()
 def list_tables() -> dict[str, Any]:
     """List all tables in the DuckDB database.
 
@@ -130,7 +130,7 @@ def list_tables() -> dict[str, Any]:
         }
 
 
-@mcp.tool()  # type: ignore[misc]
+@mcp.tool()
 def list_views() -> dict[str, Any]:
     """List all views in the DuckDB database.
 
@@ -158,7 +158,7 @@ def list_views() -> dict[str, Any]:
         }
 
 
-@mcp.tool()  # type: ignore[misc]
+@mcp.tool()
 def describe_table(table_name: str) -> dict[str, Any]:
     """Get schema information for a specific table.
 
@@ -201,7 +201,7 @@ def describe_table(table_name: str) -> dict[str, Any]:
         }
 
 
-@mcp.tool()  # type: ignore[misc]
+@mcp.tool()
 def get_table_stats(table_name: str) -> dict[str, Any]:
     """Get statistics for a specific table.
 
@@ -232,7 +232,7 @@ def get_table_stats(table_name: str) -> dict[str, Any]:
         }
 
 
-@mcp.tool()  # type: ignore[misc]
+@mcp.tool()
 def import_csv(
     file_path: str,
     table_name: str,
@@ -277,7 +277,7 @@ def import_csv(
         }
 
 
-@mcp.tool()  # type: ignore[misc]
+@mcp.tool()
 def export_table(
     table_name: str, file_path: str, format: str = "CSV"
 ) -> dict[str, Any]:
@@ -313,7 +313,7 @@ def export_table(
         }
 
 
-@mcp.resource("duckdb://status")  # type: ignore[misc]
+@mcp.resource("duckdb://status")
 def database_status() -> str:
     """Get the current database status and statistics.
 
@@ -347,7 +347,7 @@ def database_status() -> str:
         return f"Failed to get database status: {str(e)}"
 
 
-@mcp.resource("duckdb://schema")  # type: ignore[misc]
+@mcp.resource("duckdb://schema")
 def database_schema() -> str:
     """Get the complete database schema.
 

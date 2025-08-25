@@ -1,4 +1,4 @@
-# Project Name
+# GIGR MCP Server
 
 [![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -7,13 +7,16 @@
 [![Linting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
-A brief description of what this project does and who it's for.
+A Model Context Protocol (MCP) server with DuckDB integration, providing AI models with direct access to a DuckDB database through MCP tools for SQL query execution, schema inspection, and data import/export capabilities.
 
 ## Features
 
-- Feature 1: Description
-- Feature 2: Description
-- Feature 3: Description
+- **DuckDB Integration**: File-based DuckDB database with persistent storage
+- **SQL Execution**: Execute SELECT queries and DDL/DML statements through MCP tools
+- **Schema Inspection**: List tables, views, and describe table schemas
+- **Data Import/Export**: Import CSV files and export tables to CSV/Parquet formats
+- **Structured Output**: JSON-structured responses with backwards compatibility
+- **MCP Resources**: Access database status and schema through MCP resources
 
 ## Table of Contents
 
@@ -44,8 +47,8 @@ A brief description of what this project does and who it's for.
 2. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/project-name.git
-   cd project-name
+   git clone https://github.com/posgnu/gigr-mcp-server.git
+   cd gigr-db-mcp
    ```
 
 3. Install dependencies:
@@ -65,8 +68,8 @@ A brief description of what this project does and who it's for.
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/project-name.git
-   cd project-name
+   git clone https://github.com/posgnu/gigr-mcp-server.git
+   cd gigr-db-mcp
    ```
 
 2. Create a virtual environment:
@@ -84,53 +87,112 @@ A brief description of what this project does and who it's for.
 
 ## Quick Start
 
-```python
-from src.main import YourMainClass
+1. Install dependencies:
 
-# Example usage
-instance = YourMainClass()
-result = instance.do_something()
-print(result)
-```
+   ```bash
+   poetry install
+   ```
+
+2. Run the MCP server:
+
+   ```bash
+   poetry run python -m src.main
+   ```
+
+3. Test with MCP Inspector:
+
+   ```bash
+   npx @modelcontextprotocol/inspector poetry run python -m src.main
+   ```
+
+4. Example: Create a table and query data:
+   - Use `execute_statement` to create a table
+   - Use `execute_query` to retrieve data
+   - Use `list_tables` to see all tables
+   - Use `describe_table` to inspect schema
 
 ## Usage
 
-### Basic Example
-
-```python
-# Import the necessary modules
-from src.module import function
-
-# Use the function
-result = function(param1="value1", param2="value2")
-```
-
-### Advanced Example
-
-```python
-# More complex usage example
-from src.advanced import AdvancedClass
-
-config = {
-    "option1": "value1",
-    "option2": "value2"
-}
-
-advanced = AdvancedClass(**config)
-advanced.process()
-```
-
-### Command Line Interface
-
-If your project includes a CLI:
+### Running the MCP Server
 
 ```bash
-# Run the main command
-python -m src.main --help
+# Using poetry
+poetry run python -m src.main
 
-# Example command
-python -m src.main process --input data.csv --output results.json
+# Or using the CLI command
+poetry run gigr-mcp-server
 ```
+
+### Debugging with MCP Inspector
+
+Use the MCP Inspector to debug and test the server:
+
+```bash
+npx @modelcontextprotocol/inspector poetry run python -m src.main
+```
+
+This will open a web interface where you can:
+
+- View all available tools and resources
+- Test tool execution with different parameters
+- Inspect request/response payloads
+- Debug server communication
+
+### Configuration with Claude Desktop
+
+1. Edit the Claude Desktop configuration file:
+   - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+2. Add the server configuration:
+
+```json
+{
+  "mcpServers": {
+    "gigr-mcp-server": {
+      "command": "poetry",
+      "args": ["run", "python", "-m", "src.main"],
+      "cwd": "/path/to/gigr-db-mcp"
+    }
+  }
+}
+```
+
+3. Restart Claude Desktop to connect to the server
+
+## Available MCP Tools
+
+### Query Execution
+
+- **`execute_query`**: Execute SELECT queries with structured JSON output
+  - Parameters: `query` (str), `parameters` (optional list)
+  - Returns: Columns, rows, row count, and query text
+
+- **`execute_statement`**: Execute DDL/DML statements (CREATE, INSERT, UPDATE, DELETE)
+  - Parameters: `statement` (str), `parameters` (optional list)
+  - Returns: Affected rows count and success status
+
+### Schema Inspection
+
+- **`list_tables`**: Get all tables in the database
+- **`list_views`**: Get all views in the database
+- **`describe_table`**: Get table schema with column details
+  - Parameters: `table_name` (str)
+- **`get_table_stats`**: Get table statistics (row count, size)
+  - Parameters: `table_name` (str)
+
+### Data Import/Export
+
+- **`import_csv`**: Import CSV file into a table
+  - Parameters: `file_path`, `table_name`, `header` (bool), `delimiter` (str)
+
+- **`export_table`**: Export table to CSV or Parquet format
+  - Parameters: `table_name`, `file_path`, `format` (CSV/PARQUET)
+
+## Available MCP Resources
+
+- **`duckdb://status`**: Current database status and statistics
+- **`duckdb://schema`**: Complete database schema information
 
 ## Development
 
@@ -191,23 +253,25 @@ This project uses several tools to maintain code quality:
 ### Project Structure
 
 ```
-project-name/
+gigr-db-mcp/
 ├── src/                    # Source code
 │   ├── __init__.py
-│   ├── main.py            # Main entry point
-│   └── module.py          # Example module
+│   ├── main.py            # MCP server entry point with DuckDB tools
+│   └── duckdb_manager.py  # DuckDB connection manager
+├── data/                   # Database storage (auto-created)
+│   └── gigr.duckdb        # File-based DuckDB database
 ├── tests/                  # Test suite
 │   ├── __init__.py
 │   ├── conftest.py        # Pytest configuration
 │   ├── unit/              # Unit tests
 │   └── integration/       # Integration tests
 ├── docs/                   # Documentation
-├── scripts/               # Utility scripts
 ├── .github/               # GitHub specific files
 │   ├── workflows/         # GitHub Actions
 │   └── ISSUE_TEMPLATE/    # Issue templates
 ├── pyproject.toml         # Project configuration
 ├── poetry.lock           # Locked dependencies
+├── CLAUDE.md             # Claude-specific instructions
 ├── README.md             # This file
 ├── .gitignore           # Git ignore rules
 ├── .pre-commit-config.yaml # Pre-commit hooks
@@ -361,10 +425,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact
 
-- **Author**: Your Name
-- **Email**: <you@example.com>
-- **GitHub**: [@yourusername](https://github.com/yourusername)
-- **Project Link**: [https://github.com/yourusername/project-name](https://github.com/yourusername/project-name)
+- **GitHub**: [@posgnu](https://github.com/posgnu)
+- **Project Link**: [https://github.com/posgnu/gigr-mcp-server](https://github.com/posgnu/gigr-mcp-server)
 
 ## Changelog
 
@@ -372,4 +434,4 @@ See [CHANGELOG.md](CHANGELOG.md) for a detailed list of changes between versions
 
 ---
 
-Made with ❤️ by [Your Name](https://github.com/yourusername)
+Built with the [Model Context Protocol](https://modelcontextprotocol.io/) and [DuckDB](https://duckdb.org/)

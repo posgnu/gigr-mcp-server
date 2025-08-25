@@ -1,6 +1,5 @@
 """DuckDB connection manager for MCP server."""
 
-import logging
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
@@ -8,7 +7,9 @@ from typing import Any
 
 import duckdb
 
-logger = logging.getLogger(__name__)
+from .logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class DuckDBManager:
@@ -57,7 +58,7 @@ class DuckDBManager:
 
     def execute_query(
         self, query: str, parameters: list[Any] | None = None
-    ) -> tuple[list[dict], list[str]]:
+    ) -> tuple[list[dict[str, Any]], list[str]]:
         """Execute a SELECT query and return results.
 
         Args:
@@ -69,13 +70,17 @@ class DuckDBManager:
         """
         with self.get_connection() as conn:
             try:
-                if parameters:
+                if parameters is not None:
                     result = conn.execute(query, parameters)
                 else:
                     result = conn.execute(query)
 
                 # Get column names
-                columns = [desc[0] for desc in result.description]
+                columns = (
+                    [desc[0] for desc in result.description]
+                    if result.description
+                    else []
+                )
 
                 # Fetch all rows
                 rows = result.fetchall()
@@ -106,7 +111,7 @@ class DuckDBManager:
         """
         with self.get_connection() as conn:
             try:
-                if parameters:
+                if parameters is not None:
                     result = conn.execute(statement, parameters)
                 else:
                     result = conn.execute(statement)
@@ -166,7 +171,7 @@ class DuckDBManager:
         rows, _ = self.execute_query(query)
         return [row["table_name"] for row in rows]
 
-    def describe_table(self, table_name: str) -> list[dict]:
+    def describe_table(self, table_name: str) -> list[dict[str, Any]]:
         """Get table schema information.
 
         Args:
@@ -189,7 +194,7 @@ class DuckDBManager:
         rows, _ = self.execute_query(query, [table_name])
         return rows
 
-    def get_table_stats(self, table_name: str) -> dict:
+    def get_table_stats(self, table_name: str) -> dict[str, Any]:
         """Get table statistics.
 
         Args:
@@ -200,7 +205,9 @@ class DuckDBManager:
         """
         try:
             # Get row count
-            count_query = f"SELECT COUNT(*) as row_count FROM {table_name}"
+            count_query = (
+                f"SELECT COUNT(*) as row_count FROM {table_name}"  # nosec B608
+            )
             rows, _ = self.execute_query(count_query)
             row_count = rows[0]["row_count"] if rows else 0
 
@@ -224,7 +231,7 @@ class DuckDBManager:
             logger.error(f"Failed to get stats for table {table_name}: {e}")
             raise
 
-    def import_csv(self, file_path: str, table_name: str, **options) -> int:
+    def import_csv(self, file_path: str, table_name: str, **options: Any) -> int:
         """Import CSV file into a table.
 
         Args:
@@ -238,18 +245,27 @@ class DuckDBManager:
         with self.get_connection() as conn:
             try:
                 # Build options string
-                option_str = ", ".join([f"{k}={v}" for k, v in options.items()])
-                if option_str:
-                    query = f"COPY {table_name} FROM '{file_path}' (FORMAT CSV, {option_str})"
-                else:
-                    query = f"COPY {table_name} FROM '{file_path}' (FORMAT CSV, HEADER)"
+                csv_options = []
+                for k, v in options.items():
+                    if k.upper() == "HEADER" and v:
+                        csv_options.append("HEADER")
+                    elif k.upper() == "DELIMITER":
+                        csv_options.append(f"DELIMITER {v}")
+                    else:
+                        csv_options.append(f"{k} {v}")
+
+                option_str = ", ".join(csv_options) if csv_options else "HEADER"
+                query = (
+                    f"COPY {table_name} FROM '{file_path}' (FORMAT CSV, {option_str})"
+                )
 
                 conn.execute(query)
 
                 # Get row count
-                count_query = f"SELECT COUNT(*) FROM {table_name}"
+                count_query = f"SELECT COUNT(*) FROM {table_name}"  # nosec B608
                 result = conn.execute(count_query)
-                row_count = result.fetchone()[0]
+                row_result = result.fetchone()
+                row_count = row_result[0] if row_result else 0
 
                 logger.info(
                     f"Imported {row_count} rows from {file_path} to {table_name}"

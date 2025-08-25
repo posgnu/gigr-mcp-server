@@ -1,16 +1,21 @@
-"""GIGR MCP Server - Model Context Protocol server implementation with DuckDB support."""
+"""GIGR MCP Server - Model Context Protocol server with DuckDB support."""
 
 import json
-import logging
+import os
+from pathlib import Path
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
 from .duckdb_manager import get_db_manager
+from .logger import setup_logger
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+log_level = os.getenv("LOG_LEVEL", "INFO")
+log_file = os.getenv("LOG_FILE")
+logger = setup_logger(
+    __name__, level=log_level, log_file=Path(log_file) if log_file else None
+)
 
 # Create MCP server instance
 mcp = FastMCP("GIGR DuckDB MCP Server")
@@ -19,7 +24,7 @@ mcp = FastMCP("GIGR DuckDB MCP Server")
 db = get_db_manager()
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def execute_query(query: str, parameters: list[Any] | None = None) -> dict[str, Any]:
     """Execute a SELECT query on the DuckDB database.
 
@@ -63,7 +68,7 @@ def execute_query(query: str, parameters: list[Any] | None = None) -> dict[str, 
         }
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def execute_statement(
     statement: str, parameters: list[Any] | None = None
 ) -> dict[str, Any]:
@@ -96,7 +101,7 @@ def execute_statement(
         }
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def list_tables() -> dict[str, Any]:
     """List all tables in the DuckDB database.
 
@@ -110,7 +115,10 @@ def list_tables() -> dict[str, Any]:
             "success": True,
             "tables": tables,
             "count": len(tables),
-            "text": f"Found {len(tables)} tables: {', '.join(tables) if tables else 'none'}",
+            "text": (
+                f"Found {len(tables)} tables: "
+                f"{', '.join(tables) if tables else 'none'}"
+            ),
         }
 
     except Exception as e:
@@ -122,7 +130,7 @@ def list_tables() -> dict[str, Any]:
         }
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def list_views() -> dict[str, Any]:
     """List all views in the DuckDB database.
 
@@ -136,7 +144,9 @@ def list_views() -> dict[str, Any]:
             "success": True,
             "views": views,
             "count": len(views),
-            "text": f"Found {len(views)} views: {', '.join(views) if views else 'none'}",
+            "text": (
+                f"Found {len(views)} views: " f"{', '.join(views) if views else 'none'}"
+            ),
         }
 
     except Exception as e:
@@ -148,7 +158,7 @@ def list_views() -> dict[str, Any]:
         }
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def describe_table(table_name: str) -> dict[str, Any]:
     """Get schema information for a specific table.
 
@@ -191,7 +201,7 @@ def describe_table(table_name: str) -> dict[str, Any]:
         }
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def get_table_stats(table_name: str) -> dict[str, Any]:
     """Get statistics for a specific table.
 
@@ -222,7 +232,7 @@ def get_table_stats(table_name: str) -> dict[str, Any]:
         }
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def import_csv(
     file_path: str,
     table_name: str,
@@ -241,7 +251,7 @@ def import_csv(
         Dictionary with import result
     """
     try:
-        options = {"HEADER": header, "DELIMITER": f"'{delimiter}'"}
+        options = {"HEADER": header, "DELIMITER": delimiter}
 
         row_count = db.import_csv(file_path, table_name, **options)
 
@@ -250,7 +260,10 @@ def import_csv(
             "table_name": table_name,
             "file_path": file_path,
             "rows_imported": row_count,
-            "text": f"Successfully imported {row_count:,} rows from {file_path} into {table_name}",
+            "text": (
+                f"Successfully imported {row_count:,} rows "
+                f"from {file_path} into {table_name}"
+            ),
         }
 
     except Exception as e:
@@ -264,7 +277,7 @@ def import_csv(
         }
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def export_table(
     table_name: str, file_path: str, format: str = "CSV"
 ) -> dict[str, Any]:
@@ -300,7 +313,7 @@ def export_table(
         }
 
 
-@mcp.resource("duckdb://status")
+@mcp.resource("duckdb://status")  # type: ignore[misc]
 def database_status() -> str:
     """Get the current database status and statistics.
 
@@ -334,7 +347,7 @@ def database_status() -> str:
         return f"Failed to get database status: {str(e)}"
 
 
-@mcp.resource("duckdb://schema")
+@mcp.resource("duckdb://schema")  # type: ignore[misc]
 def database_schema() -> str:
     """Get the complete database schema.
 

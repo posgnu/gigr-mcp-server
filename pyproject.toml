@@ -1,16 +1,16 @@
 [tool.poetry]
-name = "project-name"
+name = "gigr-mcp-server"
 version = "0.1.0"
 packages = [
   { include = "src" }
 ]
-description = "A Python project template"
+description = "A Model Context Protocol (MCP) server for GIGR"
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 license = "MIT"
-homepage = "https://github.com/yourusername/project-name"
-repository = "https://github.com/yourusername/project-name"
-keywords = ["python", "template"]
+homepage = "https://github.com/posgnu/gigr-mcp-server"
+repository = "https://github.com/posgnu/gigr-mcp-server"
+keywords = ["mcp", "model-context-protocol", "server", "gigr"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -22,6 +22,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.11"
+mcp = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.1.0"
@@ -44,8 +45,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-# Add your CLI commands here
-# example-cli = "src.main:app"
+gigr-mcp-server = "src.main:main"
 
 [tool.isort]
 profile = "black"

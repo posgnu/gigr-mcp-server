@@ -4,7 +4,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Python project template using Poetry for dependency management. The project structure follows modern Python best practices with comprehensive tooling for code quality and testing.
+This is a Model Context Protocol (MCP) server implementation using Python and the official MCP SDK. The project provides a standardized way for AI models to access tools and resources through the MCP specification.
+
+## MCP (Model Context Protocol) Documentation
+
+### Official Resources
+
+- **Python SDK**: <https://github.com/modelcontextprotocol/python-sdk>
+- **MCP Specification**: <https://modelcontextprotocol.io/>
+- **Official MCP Servers Repository**: <https://github.com/modelcontextprotocol/servers>
+- **MCP Client Quickstart**: <https://modelcontextprotocol.io/quickstart/client>
+
+### Key Concepts
+
+- **Tools**: Functions that can be called by AI models (decorated with `@mcp.tool()`)
+- **Resources**: Data sources accessible via URI patterns (decorated with `@mcp.resource()`)
+- **FastMCP**: The main server class for implementing MCP servers
+- **Transports**: Communication methods (stdio, SSE, HTTP) - this server uses stdio
+
+### Common Patterns
+
+- Use type hints for all tool parameters and return values
+- Provide comprehensive docstrings for tools and resources
+- Handle both sync and async functions
+- Use structured data (dicts/Pydantic models) for complex responses
+- Follow URI patterns for resources (e.g., "gigr://resource/{param}")
+
+### Development Workflow for MCP
+
+1. Define tools using `@mcp.tool()` decorator
+2. Define resources using `@mcp.resource("uri://pattern")` decorator
+3. Use `await mcp.run()` to start the server
+4. Test with MCP clients or AI models that support MCP
 
 ## Essential Commands
 
@@ -21,11 +52,14 @@ poetry run pre-commit install
 poetry shell
 ```
 
-### Running Code
+### Running the MCP Server
 
 ```bash
-# Run the main application
+# Run the MCP server
 poetry run python -m src.main
+
+# Or using the CLI command
+poetry run gigr-mcp-server
 
 # Or using Make
 make run

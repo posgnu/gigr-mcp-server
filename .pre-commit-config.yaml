@@ -58,12 +58,8 @@ repos:
   hooks:
     - id: mypy
       args: [
-        '--strict',
+        '--config-file=pyproject.toml',
         '--ignore-missing-imports',
-        '--explicit-package-bases',
-        '--warn-redundant-casts',
-        '--warn-unused-ignores',
-        '--no-implicit-reexport',
       ]
       exclude: '^(tests/.*|docs/.*)'
       additional_dependencies: [
